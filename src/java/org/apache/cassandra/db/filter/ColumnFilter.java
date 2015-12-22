@@ -132,8 +132,7 @@ public class ColumnFilter
      */
     public boolean canSkipValue(ColumnDefinition column)
     {
-        // We don't use that currently, see #10655 for more details.
-        return false;
+        return isFetchAll && selection != null && !selection.contains(column);
     }
 
     /**

@@ -28,6 +28,7 @@ import org.apache.cassandra.config.ColumnDefinition;
 import org.apache.cassandra.config.DatabaseDescriptor;
 import org.apache.cassandra.db.*;
 import org.apache.cassandra.db.filter.ClusteringIndexFilter;
+import org.apache.cassandra.db.filter.ColumnFilter;
 import org.apache.cassandra.db.filter.DataLimits;
 import org.apache.cassandra.db.partitions.*;
 import org.apache.cassandra.db.rows.*;
@@ -197,10 +198,21 @@ public class DataResolver extends ResponseResolver
 
                     public void onCell(int i, Clustering clustering, Cell merged, Cell original)
                     {
-                        if (merged != null && !merged.equals(original))
+                        if (merged != null && !merged.equals(original) && !shouldSkip(merged))
                             currentRow(i, clustering).addCell(merged);
                     }
 
+                    private boolean shouldSkip(Cell cell)
+                    {
+                        // When we read, we may have some cell for which we've skipped the value for efficiency sakes. In that case, we
+                        // should include them in read-repair as they don't have their proper value (see CASSANDRA-10655). This is ok though,
+                        // those column are not actually requested by the user and are only present for the sake of CQL semantic (making sure
+                        // we can always distinguish between a row that doesn't exist from one that do exist but has no value for the column
+                        // requested by the user) and so it won't be unexpected by the user that those columns are not repaired.
+                        ColumnDefinition column = cell.column();
+                        ColumnFilter filter = command.columnFilter();
+                        return column.isComplex() ? filter.canSkipValue(column, cell.path()) : filter.canSkipValue(column);
+                    }
                 };
             }
 
