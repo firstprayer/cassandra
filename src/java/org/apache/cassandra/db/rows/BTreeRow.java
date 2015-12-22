@@ -271,6 +271,21 @@ public class BTreeRow extends AbstractRow
         });
     }
 
+    public Row withoutSkippedValues(ColumnFilter filter)
+    {
+        if (!filter.skipSomeValues())
+            return this;
+
+        return transformAndFilter(primaryKeyLivenessInfo, deletion, (cd) -> {
+
+            ColumnDefinition column = cd.column();
+            if (column.isComplex())
+                return ((ComplexColumnData)cd).withoutSkippedValues(filter);
+
+            return filter.canSkipValue(column) ? null : cd;
+        });
+    }
+
     public boolean hasComplex()
     {
         // We start by the end cause we know complex columns sort after the simple ones

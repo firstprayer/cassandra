@@ -205,6 +205,15 @@ public interface Row extends Unfiltered, Collection<ColumnData>
     public Row purge(DeletionPurger purger, int nowInSec);
 
     /**
+     * Returns a copy of this row that doesn't include any cell for which the value is skipped in {@code filter}.
+     *
+     * @param filter the {@code ColumnFilter} to use when deciding which values are skipped. This should be the filter
+     * that was used when querying the row on which this method is called.
+     * @return the row but without any cell having its value skipped by {@code filter}.
+     */
+    public Row withoutSkippedValues(ColumnFilter filter);
+
+    /**
      * Returns a copy of this row where all counter cells have they "local" shard marked for clearing.
      */
     public Row markCounterLocalToBeCleared();

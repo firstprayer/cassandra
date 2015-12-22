@@ -111,6 +111,15 @@ public class ColumnFilter
     }
 
     /**
+     * Whether the filter or not the {@code canSkipValue()} methods may return
+     * {@code true} for some column/cell.
+     */
+    public boolean skipSomeValues()
+    {
+        return isFetchAll && (selection != null || subSelections != null);
+    }
+
+    /**
      * Whether the provided column is selected by this selection.
      */
     public boolean includes(ColumnDefinition column)

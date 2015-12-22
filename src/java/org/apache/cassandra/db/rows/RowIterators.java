@@ -23,6 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.apache.cassandra.config.CFMetaData;
+import org.apache.cassandra.db.filter.ColumnFilter;
 import org.apache.cassandra.db.transform.Transformation;
 import org.apache.cassandra.utils.FBUtilities;
 
@@ -46,6 +47,22 @@ public abstract class RowIterators
 
         while (iterator.hasNext())
             iterator.next().digest(digest);
+    }
+
+    /**
+     * Filter the provided iterator to exclude cells whose value is skipped by the provided filter.
+     *
+     * @param iterator the iterator to filter.
+     * @param filter the {@code ColumnFilter} to use when deciding which values are skipped. This should be the filter
+     * that was used when querying {@code iterator}.
+     * @return the filtered iterator..
+     */
+    public static RowIterator withoutSkippedValues(RowIterator iterator, ColumnFilter filter)
+    {
+        if (!filter.skipSomeValues())
+            return iterator;
+
+        return Transformation.apply(iterator, new WithoutSkippedValuesFunction(filter));
     }
 
     /**
