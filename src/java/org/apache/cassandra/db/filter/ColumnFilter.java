@@ -105,6 +105,16 @@ public class ColumnFilter
         return isFetchAll ? metadata.partitionColumns() : selection;
     }
 
+    /**
+     * The columns actually queried by the user.
+     * <p>
+     * Note that this is in general not all the columns that are fetched internally (see {@link #fetchedColumns}).
+     */
+    public PartitionColumns queriedByUser()
+    {
+        return selection;
+    }
+
     public boolean includesAllColumns()
     {
         return isFetchAll;
