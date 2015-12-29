@@ -111,8 +111,10 @@ public class CreateIndexStatement extends SchemaAlteringStatement
             // would pull the full partition every time the static column of partition is 'bar', which sounds like offering a
             // fair potential for foot-shooting, so I prefer leaving that to a follow up ticket once we have identified cases where
             // such indexing is actually useful.
-            if (!cfm.isCompactTable() && cd.isStatic())
-                throw new InvalidRequestException("Secondary indexes are not allowed on static columns");
+            //if (!cfm.isCompactTable() && cd.isStatic())
+            //    throw new InvalidRequestException("Secondary indexes are not allowed on static columns");
+            if (cd.isStatic() && !cd.isSimple())
+                throw new InvalidRequestException("Secondary indexes for static columns are only supported on simple columns");
 
             if (cd.kind == ColumnDefinition.Kind.PARTITION_KEY && cfm.getKeyValidatorAsClusteringComparator().size() == 1)
                 throw new InvalidRequestException(String.format("Cannot create secondary index on partition key column %s", target.column));
