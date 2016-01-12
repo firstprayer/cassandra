@@ -681,12 +681,14 @@ public class SelectStatement implements CQLStatement
         ByteBuffer[] keyComponents = getComponents(cfm, partition.partitionKey());
 
         Row staticRow = partition.staticRow();
-        // If there is no rows, then provided the select was a full partition selection
-        // (i.e. not a 2ndary index search and there was no condition on clustering columns),
+        // If there is no rows, and there's no restriction on clustering/regular columns,
+        // then provided the select was a full partition selection
+        // (i.e. not a 2ndary index search and there was no condition on clustering/regular columns),
         // we want to include static columns and we're done.
         if (!partition.hasNext())
         {
-            if (!staticRow.isEmpty() && (!restrictions.usesSecondaryIndexing() || cfm.isStaticCompactTable()) && !restrictions.hasClusteringColumnsRestriction())
+            if (!staticRow.isEmpty() && (!restrictions.usesSecondaryIndexing() || cfm.isStaticCompactTable())
+                && !restrictions.hasClusteringColumnsRestriction() && !restrictions.hasNonPrimaryRegularColumnsRestriction())
             {
                 result.newRow(protocolVersion);
                 for (ColumnDefinition def : selection.getColumns())

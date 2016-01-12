@@ -529,4 +529,25 @@ public class SimpleQueryTest extends CQLTester
             row(0, 0, 0, 0)
         );
     }
+
+    /** Test for Cassandra issue 10958 **/
+    @Test
+    public void restrictionOnRegularColumnWithStaticColumnPresentTest() throws Throwable
+    {
+        createTable("CREATE TABLE %s (id int, id2 int, age int static, extra int, PRIMARY KEY(id, id2))");
+
+        execute("INSERT INTO %s (id, id2, age, extra) VALUES (?, ?, ?, ?)", 1, 1, 1, 1);
+        execute("INSERT INTO %s (id, id2, age, extra) VALUES (?, ?, ?, ?)", 2, 2, 2, 2);
+        execute("UPDATE %s SET age=? WHERE id=?", 3, 3);
+
+        assertRows(execute("SELECT * FROM %s"),
+            row(1, 1, 1, 1),
+            row(2, 2, 2, 2),
+            row(3, null, 3, null)
+        );
+
+        assertRows(execute("SELECT * FROM %s WHERE extra > 1 ALLOW FILTERING"),
+            row(2, 2, 2, 2)
+        );
+    }
 }
